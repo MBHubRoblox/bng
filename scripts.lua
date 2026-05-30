@@ -142,237 +142,249 @@ local function StartMainScript()
 	loadstring(game:HttpGet(Config.MainScriptURL))()
 end
 
-local function StartGui()
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local UICorner = Instance.new("UICorner")
-local UIGradient = Instance.new("UIGradient")
-local ImageLabel = Instance.new("ImageLabel")
-local UICorner_2 = Instance.new("UICorner")
-local TextLabel = Instance.new("TextLabel")
-local TextLabel_2 = Instance.new("TextLabel")
-local TextButton = Instance.new("TextButton")
-local UIGradient_2 = Instance.new("UIGradient")
-local TextBox = Instance.new("TextBox")
-local UIGradient_3 = Instance.new("UIGradient")
-local TextLabel_3 = Instance.new("TextLabel")
-local TextLabel_4 = Instance.new("TextLabel")
-local TextButton_2 = Instance.new("TextButton")
-local UIGradient_4 = Instance.new("UIGradient")
-local TextButton_3 = Instance.new("TextButton")
-local UIGradient_5 = Instance.new("UIGradient")
-local TextButton_4 = Instance.new("TextButton")
-local UIGradient_6 = Instance.new("UIGradient")
 
+local function CreateGUI()
+    local player = game:GetService("Players").LocalPlayer
+    local coreGui = game:GetService("CoreGui")
+    local targetParent = pcall(function() return coreGui end) and coreGui or player:WaitForChild("PlayerGui")
+    
+    if targetParent:FindFirstChild("OYB_KeySystem") then targetParent.OYB_KeySystem:Destroy() end
+
+    local ScreenGui = Instance.new("ScreenGui", targetParent)
+    ScreenGui.Name = "OYB_KeySystem"
+    ScreenGui.ResetOnSpawn = false
+
+    local MainFrame = Instance.new("Frame", ScreenGui)
+    MainFrame.Size = UDim2.new(0, 340, 0, 420)
+    MainFrame.Position = UDim2.new(0.5, -170, 0.5, -210)
+    MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+    MainFrame.Active = true;
+    MainFrame.Draggable = true
+    Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
+    
+    local mainStroke = Instance.new("UIStroke", MainFrame)
+    mainStroke.Thickness = 2;
+    mainStroke.Color = Color3.fromRGB(40, 40, 40)
+
+    -- Close Button
+    local CloseBtn = Instance.new("TextButton", MainFrame)
+    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+    CloseBtn.BackgroundTransparency = 1
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.fromRGB(255, 50, 50)
+    CloseBtn.Font = Enum.Font.GothamBold
+    CloseBtn.TextSize = 18
+    CloseBtn.ZIndex = 10
+    CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+
+    local Title = Instance.new("TextLabel", MainFrame)
+    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.Text = "Yameme Hub | Forsaken
+    Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    Title.TextColor3 = Color3.fromRGB(0, 170, 255)
+    Title.Font = Enum.Font.GothamBold;
+    Title.TextSize = 16
+    Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 15)
+
+    local PromoText = Instance.new("TextLabel", MainFrame)
+    PromoText.Size = UDim2.new(0.9, 0, 0, 50)
+    PromoText.Position = UDim2.new(0.05, 0, 0, 50)
+    PromoText.BackgroundTransparency = 1
+    PromoText.Text = "yameme hub forsaken released to may 2026."
+    PromoText.TextColor3 = Color3.fromRGB(0, 170, 255)
+    PromoText.Font = Enum.Font.GothamBold;
+    PromoText.TextSize = 14
+    PromoText.TextWrapped = true
+
+    -- Rainbow Stroke Function
+    local function AddRainbowStroke(parent)
+        local stroke = Instance.new("UIStroke", parent)
+        stroke.Thickness = 2
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        task.spawn(function()
+            while task.wait() do
+                local hue = tick() % 5 / 5
+                stroke.Color = Color3.fromHSV(hue, 1, 1)
+            end
+        end)
+    end
+
+    -- Dynamic Positioning for elements
+    local currentYOffset = 105
+
+    -- Discord Button
+    if Config.ShowDiscord then
+        local DiscordBtn = Instance.new("TextButton", MainFrame)
+        DiscordBtn.Size = UDim2.new(0.85, 0, 0, 35)
+        DiscordBtn.Position = UDim2.new(0.075, 0, 0, currentYOffset)
+        DiscordBtn.Text = "      JOIN DISCORD"
+        DiscordBtn.Font = "GothamBold";
+        DiscordBtn.TextSize = 14
+        DiscordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+        DiscordBtn.TextColor3 = Color3.new(1, 1, 1)
+        Instance.new("UICorner", DiscordBtn)
+        AddRainbowStroke(DiscordBtn)
+
+        local DiscordIcon = Instance.new("ImageLabel", DiscordBtn)
+        DiscordIcon.Size = UDim2.new(0, 20, 0, 20)
+        DiscordIcon.Position = UDim2.new(0.1, 0, 0.5, -10)
+        DiscordIcon.BackgroundTransparency = 1
+        DiscordIcon.Image = "rbxassetid://18505728201"
+        
+        DiscordBtn.MouseButton1Click:Connect(function()
+            fSetClipboard(Config.DiscordURL)
+            local Status = MainFrame:FindFirstChild("StatusLabel")
+            if Status then 
+                Status.Text = "Discord Link Copied!"
+                Status.TextColor3 = Color3.fromRGB(88, 101, 242)
+            end
+            -- Auto-extract invite code from config URL
+            local inviteCode = string.match(Config.DiscordURL, "discord%.gg/([%w-]+)")
+            if syn and syn.request and inviteCode then
+                syn.request({Url = "http://localhost:1111/discord?invite=" .. inviteCode, Method = "GET"})
+            end
+        end)
+        
+        currentYOffset = currentYOffset + 45
+    end
+
+    -- YouTube Button
+    if Config.ShowYoutube then
+        local YTBtn = Instance.new("TextButton", MainFrame)
+        YTBtn.Size = UDim2.new(0.85, 0, 0, 35)
+        YTBtn.Position = UDim2.new(0.075, 0, 0, currentYOffset)
+        YTBtn.Text = "      SUBSCRIBE YOUTUBE"
+        YTBtn.Font = "GothamBold";
+        YTBtn.TextSize = 14
+        YTBtn.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        YTBtn.TextColor3 = Color3.new(1, 1, 1)
+        Instance.new("UICorner", YTBtn)
+        AddRainbowStroke(YTBtn)
+
+        local YTIcon = Instance.new("ImageLabel", YTBtn)
+        YTIcon.Size = UDim2.new(0, 20, 0, 20)
+        YTIcon.Position = UDim2.new(0.1, 0, 0.5, -10)
+        YTIcon.BackgroundTransparency = 1
+        YTIcon.Image = "rbxassetid://82532989017804"
+        
+        YTBtn.MouseButton1Click:Connect(function()
+            fSetClipboard(Config.YoutubeURL)
+            local Status = MainFrame:FindFirstChild("StatusLabel")
+            if Status then
+                Status.Text = "YouTube Link Copied!"
+                Status.TextColor3 = Color3.fromRGB(255, 0, 0)
+            end
+        end)
+        
+        currentYOffset = currentYOffset + 45
+    end
+
+    -- Key Input Box
+    local KeyInput = Instance.new("TextBox", MainFrame)
+    KeyInput.Size = UDim2.new(0.85, 0, 0, 40)
+    KeyInput.Position = UDim2.new(0.075, 0, 0, currentYOffset + 15)
+    KeyInput.PlaceholderText = "Enter Key..."
+    KeyInput.Text = ""
+    KeyInput.Font = Enum.Font.GothamSemibold;
+    KeyInput.TextSize = 14
+    KeyInput.BackgroundColor3 = Color3.fromRGB(25, 25, 25);
+    KeyInput.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", KeyInput)
+
+    local VerifyBtn = Instance.new("TextButton", MainFrame)
+    VerifyBtn.Size = UDim2.new(0.4, 0, 0, 40)
+    VerifyBtn.Position = UDim2.new(0.075, 0, 0, currentYOffset + 65)
+    VerifyBtn.Text = "VERIFY"
+    VerifyBtn.Font = "GothamBold";
+    VerifyBtn.TextSize = 14
+    VerifyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 255);
+    VerifyBtn.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", VerifyBtn)
+
+    local GetKeyBtn = Instance.new("TextButton", MainFrame)
+    GetKeyBtn.Size = UDim2.new(0.4, 0, 0, 40)
+    GetKeyBtn.Position = UDim2.new(0.525, 0, 0, currentYOffset + 65)
+    GetKeyBtn.Text = "GET KEY"
+    GetKeyBtn.Font = "GothamBold";
+    GetKeyBtn.TextSize = 14
+    GetKeyBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35);
+    GetKeyBtn.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", GetKeyBtn)
+
+    local Status = Instance.new("TextLabel", MainFrame)
+    Status.Name = "StatusLabel"
+    Status.Size = UDim2.new(1, 0, 0, 30)
+    Status.Position = UDim2.new(0, 0, 0, currentYOffset + 115)
+    Status.BackgroundTransparency = 1
+    Status.Text = "Waiting for input..."
+    Status.TextColor3 = Color3.fromRGB(150, 150, 150)
+    Status.Font = Enum.Font.Gotham;
+    Status.TextSize = 12
+    
+    -- Dynamically adjust main frame height based on active elements
+    MainFrame.Size = UDim2.new(0, 340, 0, currentYOffset + 160)
+
+    -- Logic
+    VerifyBtn.MouseButton1Click:Connect(function()
+        local key = KeyInput.Text
+        if key == "" then Status.Text = "Enter a key!"; return end
+        Status.Text = "Verifying..."
+        local success, msg = redeemKey(key)
+        if success then
+            Status.Text = "Success! Loading..."
+            Status.TextColor3 = Color3.fromRGB(0, 255, 100)
+            task.wait(0.5)
+            ScreenGui:Destroy()
+            StartMainScript()
+        else
+            Status.Text = msg
+            Status.TextColor3 = Color3.fromRGB(255, 50, 50)
+        end
+    end)
+
+    GetKeyBtn.MouseButton1Click:Connect(function()
+        Status.Text = "Getting Link..."
+        local success, link = cacheLink()
+        if success then
+            fSetClipboard(link)
+            Status.Text = "Link Copied!"
+            Status.TextColor3 = Color3.fromRGB(0, 170, 255)
+        else
+            Status.Text = "Error: " .. tostring(link)
+        end
+    end)
+
+    -- Auto Check Saved Key
+    if isfile and isfile(Config.KeyFileName) then
+        local savedKey = readfile(Config.KeyFileName)
+        if savedKey ~= "" then
+            Status.Text = "Found saved key, verifying..."
+            task.spawn(function()
+                local success, msg = redeemKey(savedKey)
+                if success then
+                    Status.Text = "Auto-login success!"
+                    Status.TextColor3 = Color3.fromRGB(0, 255, 100)
+                    task.wait(0.5)
+                    ScreenGui:Destroy()
+                    StartMainScript()
+                else
+                    Status.Text = "Saved key expired or invalid."
+                    Status.TextColor3 = Color3.fromRGB(255, 150, 0)
+                end
+            end)
+        end
+    end
+end
+
+-- Check if main script GUI is already open
 local player = game:GetService("Players").LocalPlayer
-local coreGui = game:GetService("CoreGui")
-local targetParent = pcall(function() return coreGui end) and coreGui or player:WaitForChild("PlayerGui")
+local pGui = player:WaitForChild("PlayerGui")
 
-if targetParent:FindFirstChild("OYB_KeySystem") then targetParent.OYB_KeySystem:Destroy() end
-
---Properties:
-
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-
-Frame.Parent = ScreenGui
-Frame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-Frame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-Frame.BorderSizePixel = 0
-Frame.Position = UDim2.new(0.201133147, 0, 0.197265625, 0)
-Frame.Size = UDim2.new(0, 421, 0, 291)
-
-UICorner.Parent = Frame
-
-UIGradient.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-UIGradient.Parent = Frame
-
-ImageLabel.Parent = Frame
-ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-ImageLabel.BackgroundTransparency = 1.000
-ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-ImageLabel.BorderSizePixel = 0
-ImageLabel.Position = UDim2.new(0.0166270789, 0, 0.0137457047, 0)
-ImageLabel.Size = UDim2.new(0, 35, 0, 31)
-ImageLabel.Image = "rbxassetid://82048629403123"
-
-UICorner_2.Parent = ImageLabel
-
-TextLabel.Parent = Frame
-TextLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel.BackgroundTransparency = 1.000
-TextLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel.BorderSizePixel = 0
-TextLabel.Position = UDim2.new(0.0997624695, 0, 0, 0)
-TextLabel.Size = UDim2.new(0, 233, 0, 28)
-TextLabel.Font = Enum.Font.Michroma
-TextLabel.Text = "Yameme Hub | Forsaken"
-TextLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel.TextScaled = true
-TextLabel.TextSize = 14.000
-TextLabel.TextWrapped = true
-
-TextLabel_2.Parent = Frame
-TextLabel_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_2.BackgroundTransparency = 1.000
-TextLabel_2.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_2.BorderSizePixel = 0
-TextLabel_2.Position = UDim2.new(0.0997624695, 0, 0.0515463911, 0)
-TextLabel_2.Size = UDim2.new(0, 182, 0, 28)
-TextLabel_2.Font = Enum.Font.Michroma
-TextLabel_2.Text = "By MBHUBRoblox_Official"
-TextLabel_2.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_2.TextScaled = true
-TextLabel_2.TextSize = 14.000
-TextLabel_2.TextWrapped = true
-
-TextButton.Parent = Frame
-TextButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextButton.BorderColor3 = Color3.fromRGB(149, 160, 255)
-TextButton.BorderSizePixel = 3
-TextButton.Position = UDim2.new(0.8598575, 0, 0.0274914093, 0)
-TextButton.Size = UDim2.new(0, 49, 0, 20)
-TextButton.Font = Enum.Font.SourceSans
-TextButton.Text = "X"
-TextButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextButton.TextSize = 14.000
-
-UIGradient_2.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-UIGradient_2.Parent = TextButton
-
-TextBox.Parent = Frame
-TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.BorderColor3 = Color3.fromRGB(149, 160, 255)
-TextBox.BorderSizePixel = 4
-TextBox.Position = UDim2.new(0.0498812348, 0, 0.329896897, 0)
-TextBox.Size = UDim2.new(0, 376, 0, 29)
-TextBox.ClearTextOnFocus = false
-	TextBox.Font = Enum.Font.DenkOne
-TextBox.PlaceholderText = "We're search yameme in r-u-l-e-3-4-.u-s"
-TextBox.Text = ""
-TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextBox.TextSize = 25.000
-TextBox.TextWrapped = true
-TextBox.TextXAlignment = Enum.TextXAlignment.Left
-
-UIGradient_3.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-UIGradient_3.Parent = TextBox
-
-TextLabel_3.Parent = Frame
-TextLabel_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_3.BackgroundTransparency = 1.000
-TextLabel_3.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_3.BorderSizePixel = 0
-TextLabel_3.Position = UDim2.new(0.280285031, 0, 0.903780043, 0)
-TextLabel_3.Size = UDim2.new(0, 182, 0, 28)
-TextLabel_3.Font = Enum.Font.Michroma
-TextLabel_3.Text = "Released On January 2026"
-TextLabel_3.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_3.TextScaled = true
-TextLabel_3.TextSize = 14.000
-TextLabel_3.TextWrapped = true
-
-TextLabel_4.Parent = Frame
-TextLabel_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextLabel_4.BackgroundTransparency = 1.000
-TextLabel_4.BorderColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_4.BorderSizePixel = 0
-TextLabel_4.Position = UDim2.new(0.175771967, 0, 0.731958747, 0)
-TextLabel_4.Size = UDim2.new(0, 270, 0, 21)
-TextLabel_4.Font = Enum.Font.Michroma
-TextLabel_4.Text = "when you get new key, get for 24 hour."
-TextLabel_4.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextLabel_4.TextSize = 14.000
-TextLabel_4.TextWrapped = true
-
-TextButton_2.Parent = Frame
-TextButton_2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextButton_2.BorderColor3 = Color3.fromRGB(149, 160, 255)
-TextButton_2.BorderSizePixel = 3
-TextButton_2.Position = UDim2.new(0.0498812348, 0, 0.470790386, 0)
-TextButton_2.Size = UDim2.new(0, 122, 0, 36)
-TextButton_2.Font = Enum.Font.Michroma
-TextButton_2.Text = "Verify"
-TextButton_2.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextButton_2.TextSize = 27.000
-	TextButton_2.TextWrapped = true
-	TextButton_2.MouseButton1Down:Connect(function()
-		local key = TextBox.Text
-		if key == "" then TextLabel_4.Text = "Enter a key!"; return end
-		TextLabel_4.Text = "Verifying..."
-		local success, msg = redeemKey(key)
-		if success then
-			TextLabel_4.Text = "Success! Loading..."
-			TextLabel_4.TextColor3 = Color3.fromRGB(0, 255, 100)
-			task.wait(0.5)
-			ScreenGui:Destroy()
-			StartMainScript()
-		else
-			TextLabel_4.Text = msg
-			TextLabel_4.TextColor3 = Color3.fromRGB(255, 50, 50)
-		end
-	end)
-
-UIGradient_4.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-UIGradient_4.Parent = TextButton_2
-	
-if Config.ShowDiscord then
-TextButton_3.Parent = Frame
-TextButton_3.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextButton_3.BorderColor3 = Color3.fromRGB(149, 160, 255)
-TextButton_3.BorderSizePixel = 3
-TextButton_3.Position = UDim2.new(0.653206646, 0, 0.470790386, 0)
-TextButton_3.Size = UDim2.new(0, 122, 0, 36)
-TextButton_3.Font = Enum.Font.Michroma
-TextButton_3.Text = "Discord"
-TextButton_3.TextColor3 = Color3.fromRGB(0, 0, 0)
-		TextButton_3.TextSize = 27.000
-		
-		TextButton_3.MouseButton1Down:Connect(function()
-			fSetClipboard(Config.DiscordURL)
-			local Status = MainFrame:FindFirstChild("StatusLabel")
-			if Status then 
-				Status.Text = "Discord Link Copied!"
-				Status.TextColor3 = Color3.fromRGB(88, 101, 242)
-			end
-			-- Auto-extract invite code from config URL
-			local inviteCode = string.match(Config.DiscordURL, "discord%.gg/([%w-]+)")
-			if syn and syn.request and inviteCode then
-				syn.request({Url = "http://localhost:1111/discord?invite=" .. inviteCode, Method = "GET"})
-			end
-		end)
-
-		currentYOffset = currentYOffset + 45
-		end)
+if pGui:FindFirstChild(Config.MainGuiName) then
+    StartMainScript() -- Run if main script is already active
+    return
 end
 
-UIGradient_5.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-UIGradient_5.Parent = TextButton_3
-
-TextButton_4.Parent = Frame
-TextButton_4.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextButton_4.BorderColor3 = Color3.fromRGB(149, 160, 255)
-TextButton_4.BorderSizePixel = 3
-TextButton_4.Position = UDim2.new(0.339667469, 0, 0.470790386, 0)
-TextButton_4.Size = UDim2.new(0, 127, 0, 36)
-TextButton_4.Font = Enum.Font.Michroma
-TextButton_4.Text = "Get Key"
-TextButton_4.TextColor3 = Color3.fromRGB(0, 0, 0)
-TextButton_4.TextSize = 27.000
-TextButton_4.MouseButton1Down:Connect(function()
-	TextLabel_4.Text = "Getting Link..."
-	local success, link = cacheLink()
-	if success then
-		fSetClipboard(link)
-		TextLabel_4.Text = "Link Copied!"
-		TextLabel_4.TextColor3 = Color3.fromRGB(0, 170, 255)
-	else
-		TextLabel_4.Text = "Error: " .. tostring(link)
-	end
-end)
-
-UIGradient_6.Color = ColorSequence.new{ColorSequenceKeypoint.new(0.00, Color3.fromRGB(193, 189, 255)), ColorSequenceKeypoint.new(1.00, Color3.fromRGB(255, 255, 255))}
-	UIGradient_6.Parent = TextButton_4
-	
-end
-StartGui()
+-- Initialize Key System GUI
+CreateGUI()
