@@ -44,10 +44,10 @@ local useNonce = true -- Hidden from Config to avoid user confusion, but active 
 
 -- Safe request function for universal executor support
 local function safeRequest(options)
-	local req = request or http_request or syn_request or (http and http.request )
-	if not req then return nil, "HTTP requests not supported" end
-	local success, response = pcall(function() return req(options) end)
-	if success and response then return response else return nil, "Connection Error" end
+    local req = request or http_request or syn_request or (http and http.request )
+    if not req then return nil, "HTTP requests not supported" end
+    local success, response = pcall(function() return req(options) end)
+    if success and response then return response else return nil, "Connection Error" end
 end
 
 local fSetClipboard = setclipboard or toclipboard or function() end
@@ -59,89 +59,92 @@ local host = "https://api.platoboost.com"
 
 -- Check server connectivity
 local function checkConnectivity( )
-	local response = safeRequest({Url = host .. "/public/connectivity", Method = "GET"})
-	if not response or (response.StatusCode ~= 200 and response.StatusCode ~= 429) then
-		host = "https://api.platoboost.net"
-	end
+    local response = safeRequest({Url = host .. "/public/connectivity", Method = "GET"})
+    if not response or (response.StatusCode ~= 200 and response.StatusCode ~= 429) then
+        host = "https://api.platoboost.net"
+    end
 end
 checkConnectivity( )
 
 local function generateNonce()
-	local str = ""
-	for _ = 1, 16 do str = str .. fStringChar(fMathFloor(fMathRandom() * (122 - 97 + 1)) + 97) end
-	return str
+    local str = ""
+    for _ = 1, 16 do str = str .. fStringChar(fMathFloor(fMathRandom() * (122 - 97 + 1)) + 97) end
+    return str
 end
 
 -- Get player's key link
 local function cacheLink()
-	if cachedTime + (10*60) < fOsTime() then
-		local response, err = safeRequest({
-			Url = host .. "/public/start",
-			Method = "POST",
-			Body = lEncode({service = Config.ServiceId, identifier = lDigest(fGetHwid())}),
-			Headers = {["Content-Type"] = "application/json"}
-		})
-		if response and response.StatusCode == 200 then
-			local decoded = lDecode(response.Body)
-			if decoded.success then
-				cachedLink = decoded.data.url
-				cachedTime = fOsTime()
-				return true, cachedLink
-			end
-		end
-		return false, err or "Server Unreachable"
-	end
-	return true, cachedLink
+    if cachedTime + (10*60) < fOsTime() then
+        local response, err = safeRequest({
+            Url = host .. "/public/start",
+            Method = "POST",
+            Body = lEncode({service = Config.ServiceId, identifier = lDigest(fGetHwid())}),
+            Headers = {["Content-Type"] = "application/json"}
+        })
+        if response and response.StatusCode == 200 then
+            local decoded = lDecode(response.Body)
+            if decoded.success then
+                cachedLink = decoded.data.url
+                cachedTime = fOsTime()
+                return true, cachedLink
+            end
+        end
+        return false, err or "Server Unreachable"
+    end
+    return true, cachedLink
 end
 
 -- Verify key on input
 local function redeemKey(key)
-	local nonce = generateNonce()
-	local body = {identifier = lDigest(fGetHwid()), key = key}
-	if useNonce then body.nonce = nonce end
-
-	local response, err = safeRequest({
-		Url = host .. "/public/redeem/" .. fToString(Config.ServiceId),
-		Method = "POST",
-		Body = lEncode(body),
-		Headers = {["Content-Type"] = "application/json"}
-	})
-
-	if response and response.StatusCode == 200 then
-		local decoded = lDecode(response.Body)
-		if decoded.success and decoded.data.valid then
-			if useNonce then
-				if decoded.data.hash == lDigest("true" .. "-" .. nonce .. "-" .. Config.PlatoSecret) then 
-					if writefile then writefile(Config.KeyFileName, key) end
-					return true, "Success" 
-				end
-				return false, "Integrity Check Failed"
-			end
-			if writefile then writefile(Config.KeyFileName, key) end
-			return true, "Success"
-		end
-		return false, decoded.message or "Invalid Key"
-	end
-	return false, err or "Server Error"
+    local nonce = generateNonce()
+    local body = {identifier = lDigest(fGetHwid()), key = key}
+    if useNonce then body.nonce = nonce end
+    
+    local response, err = safeRequest({
+        Url = host .. "/public/redeem/" .. fToString(Config.ServiceId),
+        Method = "POST",
+        Body = lEncode(body),
+        Headers = {["Content-Type"] = "application/json"}
+    })
+    
+    if response and response.StatusCode == 200 then
+        local decoded = lDecode(response.Body)
+        if decoded.success and decoded.data.valid then
+            if useNonce then
+                if decoded.data.hash == lDigest("true" .. "-" .. nonce .. "-" .. Config.PlatoSecret) then 
+                    if writefile then writefile(Config.KeyFileName, key) end
+                    return true, "Success" 
+                end
+                return false, "Integrity Check Failed"
+            end
+            if writefile then writefile(Config.KeyFileName, key) end
+            return true, "Success"
+        end
+        return false, decoded.message or "Invalid Key"
+    end
+    return false, err or "Server Error"
 end
+
+-------------------------------------------------------------------------------
+--! GUI & MAIN SCRIPT EXECUTION
+-------------------------------------------------------------------------------
 
 local function StartMainScript()
-	local player = game:GetService("Players").LocalPlayer
-	local pGui = player:WaitForChild("PlayerGui")
-
-	-- Destroy old GUI if it exists
-	if pGui:FindFirstChild(Config.OldGuiName) then 
-		pGui[Config.OldGuiName]:Destroy() 
-		task.wait(0.1)
-	end
-
-	-- Set secret global variable to bypass main script protection
-	_G[Config.Secret] = true 
-
-	-- Execute main script
-	loadstring(game:HttpGet(Config.MainScriptURL))()
+    local player = game:GetService("Players").LocalPlayer
+    local pGui = player:WaitForChild("PlayerGui")
+    
+    -- Destroy old GUI if it exists
+    if pGui:FindFirstChild(Config.OldGuiName) then 
+        pGui[Config.OldGuiName]:Destroy() 
+        task.wait(0.1)
+    end
+    
+    -- Set secret global variable to bypass main script protection
+    _G[Config.Secret] = true 
+    
+    -- Execute main script
+    loadstring(game:HttpGet(Config.MainScriptURL))()
 end
-
 
 local function CreateGUI()
     local player = game:GetService("Players").LocalPlayer
@@ -180,7 +183,7 @@ local function CreateGUI()
 
     local Title = Instance.new("TextLabel", MainFrame)
     Title.Size = UDim2.new(1, 0, 0, 50)
-    Title.Text = "Yameme Hub | Forsaken
+    Title.Text = Config.HubName
     Title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     Title.TextColor3 = Color3.fromRGB(0, 170, 255)
     Title.Font = Enum.Font.GothamBold;
@@ -191,7 +194,7 @@ local function CreateGUI()
     PromoText.Size = UDim2.new(0.9, 0, 0, 50)
     PromoText.Position = UDim2.new(0.05, 0, 0, 50)
     PromoText.BackgroundTransparency = 1
-    PromoText.Text = "yameme hub forsaken released to may 2026."
+    PromoText.Text = Config.HubDescription
     PromoText.TextColor3 = Color3.fromRGB(0, 170, 255)
     PromoText.Font = Enum.Font.GothamBold;
     PromoText.TextSize = 14
@@ -248,6 +251,7 @@ local function CreateGUI()
         
         currentYOffset = currentYOffset + 45
     end
+
 
     -- YouTube Button
     if Config.ShowYoutube then
@@ -385,6 +389,9 @@ if pGui:FindFirstChild(Config.MainGuiName) then
     StartMainScript() -- Run if main script is already active
     return
 end
+
+-- Initialize Key System GUI
+CreateGUI()
 
 -- Initialize Key System GUI
 CreateGUI()
